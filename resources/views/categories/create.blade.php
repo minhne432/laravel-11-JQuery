@@ -12,6 +12,12 @@
     {{-- jQuery CDN --}}
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
         crossorigin="anonymous"></script>
+    {{-- Sweetalert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- Datatable --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js">
+    </script>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Create categories</title>
@@ -20,7 +26,8 @@
 <body>
 
     <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade ajax-modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <form action="" id="ajaxForm">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -32,6 +39,7 @@
                         <div class="form-group mb-3">
                             <label for="">Name:</label>
                             <input type="text" name="name" id="name" class="form-control">
+                            <span id="nameError" class="text-danger error-messages"></span>
                         </div>
                         <div class="form-group mb-1">
                             <label for="">Type:</label>
@@ -40,6 +48,7 @@
                                 <option value="electronic">Electronic</option>
                                 <option value="mobile">Mobile</option>
                             </select>
+                            <span id="typeError" class="text-danger error-messages"></span>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -54,10 +63,25 @@
     <div class="row">
         <div class="col-md-6 offset-3" style="margin-top: 100px">
             <!-- Button trigger modal -->
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <button type="button" class="btn btn-info" id="addCategory" data-bs-toggle="modal"
+                data-bs-target="#exampleModal">
                 Add category
             </button>
+            <table id="category-table" class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
         </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
@@ -66,32 +90,85 @@
 
     <script>
         $(document).ready(function() {
-             // get CSRF token from meta tag
+            // get CSRF token from meta tag
             var csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-            $("#modal-title").html("Create category");
-            $("#saveBtn").html("Save category");
-            var form = $("#ajaxForm");
+            $("#category-table").DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('categories.index') }}",
+                columns: [{
+                        data: 'id'
+                    },
+                    {
+                        data: 'name'
+                    },
+                    {
+                        data: 'type'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
+            });
 
+            $("#addCategory").click(function() {
+                $("#modal-title").html("Create category");
+                $("#saveBtn").html("Save category");
+            })
+
+
+            var form = $("#ajaxForm");
             $("#saveBtn").click(function() {
                 var formData = new FormData(form[0]);
-                console.log(formData);
                 $.ajax({
-                    url: '{{route("categories.store")}}',
+                    url: '{{ route('categories.store') }}',
                     method: 'POST',
                     headers: {
-                       'X-CSRF-TOKEN':csrfToken
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     processData: false,
                     contentType: false,
                     data: formData,
                     success: function(response) {
-                        console.log(response);
+                        $(".ajax-modal").modal('hide');
+                        Swal.fire({
+                            title: "Success",
+                            text: response.success,
+                            icon: "success"
+                        });
+                        $('#category-table').DataTable().ajax.reload();
                     },
                     error: function(error) {
                         console.log(error);
                     }
                 });
+            });
+
+            // Edit button code
+            $('body').on('click', '.editButton', function() {
+                var id = $(this).data('id');
+
+                $.ajax({
+                    url: '{{ url('categories', '') }}' + '/' + id + '/' + 'edit',
+                    method: 'GET',
+                    success: function(response) {
+                        $('.ajax-modal').modal('show');
+                        $('#modal-title').html('Edit category');
+                        $('#saveBtn').html('Update');
+                        $('#name').val(response.name);
+                        $("#type").append('<option selected value="' + response.id + '">' +
+                            response.type + '</option>').selectmenu('refresh');
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+
+                })
+
             });
         });
     </script>
