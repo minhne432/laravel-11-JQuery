@@ -32,7 +32,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modal-title"></h5>
+                        <h5 class="modal-title" id="modal-title">Create category</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -55,7 +55,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="saveBtn"></button>
+                        <button type="button" class="btn btn-primary" id="saveBtn">Save</button>
                     </div>
                 </div>
             </div>
@@ -160,12 +160,15 @@
                 ]
             });
 
+            $('#addCategory').click(function(){
+                $('#name').val('');
+                $('#type').val("Choose Option");
+            });
 
-                $("#modal-title").html("Create category");
-                $("#saveBtn").html("Save category");
 
 
-            //store
+
+            //save button
             var form = $("#ajaxForm");
 
             $("#saveBtn").click(function() {
