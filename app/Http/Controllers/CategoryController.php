@@ -6,7 +6,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use Yajra\DataTables\Facades\DataTables;
-// use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log;
 
 
 class CategoryController extends Controller
@@ -20,7 +20,7 @@ class CategoryController extends Controller
         if ($request->ajax()) {
             return DataTables::of($categories)
                 ->addColumn('action', function ($row) {
-                    return '<a href="javascript:void(0)" class="btn btn-info editButton" data-id="' . $row->id . '">Edit</a>';
+                    return '<a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#editModal" class="btn btn-info editButton" data-id="' . $row->id . '">Edit</a>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -36,21 +36,39 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        // Log::info('store request data: ' . json_encode($request->all()));   
-        // Log::info('store request data: ', $request->only(['name', 'type']));
-        $request->validate([
-            'name' => 'required|min:2|max:30',
-            'type' => 'required'
-        ]);
 
-        Category::create([
-            'name' => $request->input('name'),
-            'type' => $request->input('type')
-        ]);
+        if ($request->category_id) {
 
-        return response()->json([
-            'success' => 'Category saved successfully'
-        ], 201);
+            $category = Category::find($request->category_id);
+            if (!$category) {
+                abort(404);
+            }
+
+            $category->update([
+                'name' => $request->name,
+                'type' => $request->type
+            ]);
+
+            return response()->json([
+                'success' => 'Category updated successfully!'
+            ]);
+        } else {
+            // Log::info('store request data: ' . json_encode($request->all()));   
+            // Log::info('store request data: ', $request->only(['name', 'type']));
+            $request->validate([
+                'name' => 'required|min:2|max:30',
+                'type' => 'required'
+            ]);
+
+            Category::create([
+                'name' => $request->input('name'),
+                'type' => $request->input('type')
+            ]);
+
+            return response()->json([
+                'success' => 'Category saved successfully'
+            ], 201);
+        }
     }
 
     public function edit($id)
@@ -62,5 +80,22 @@ class CategoryController extends Controller
         }
 
         return $categories;
+    }
+
+    public function update(Request $request)
+    {
+
+        //co co hoi thi validation
+
+        $categories = Category::find($request->category_id);
+
+        $categories->update([
+            'name' => $request->name,
+            'type' => $request->type,
+        ]);
+
+        return response()->json([
+            'success' => 'Category updated successfully!'
+        ]);
     }
 }

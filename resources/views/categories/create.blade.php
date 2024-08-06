@@ -25,7 +25,7 @@
 
 <body>
 
-    <!-- Modal -->
+   <!-- Modal for Add Category -->
     <div class="modal fade ajax-modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <form action="" id="ajaxForm">
@@ -45,8 +45,10 @@
                             <label for="">Type:</label>
                             <select id="type" name="type" class="form-control">
                                 <option disabled selected>Choose Option</option>
-                                <option value="electronic">Electronic</option>
-                                <option value="mobile">Mobile</option>
+                                <option value="food">Food</option>
+                                <option value="fashion">Fashion</option>
+                                <option value="book">Book</option>
+                                <option value="sport">Sport</option>
                             </select>
                             <span id="typeError" class="text-danger error-messages"></span>
                         </div>
@@ -59,6 +61,45 @@
             </div>
         </form>
     </div>
+
+
+    <!-- Modal for Edit Category -->
+    <div class="modal fade edit-modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <form action="" id="editForm">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Category</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit_category_id" name="category_id" value="">
+                        <div class="form-group mb-3">
+                            <label for="edit_name">Name:</label>
+                            <input type="text" name="name" id="edit_name" class="form-control">
+                            <span id="edit_nameError" class="text-danger error-messages"></span>
+                        </div>
+                        <div class="form-group mb-1">
+                            <label for="edit_type">Type:</label>
+                            <select id="edit_type" name="type" class="form-control">
+                                <option disabled selected>Choose Option</option>
+                                <option value="food">Food</option>
+                                <option value="fashion">Fashion</option>
+                                <option value="book">Book</option>
+                                <option value="sport">Sport</option>
+                            </select>
+                            <span id="edit_typeError" class="text-danger error-messages"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveEditBtn">Update category</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
 
     <div class="row">
         <div class="col-md-6 offset-3" style="margin-top: 100px">
@@ -83,6 +124,10 @@
         </div>
 
     </div>
+
+
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
@@ -115,13 +160,14 @@
                 ]
             });
 
-            $("#addCategory").click(function() {
+
                 $("#modal-title").html("Create category");
                 $("#saveBtn").html("Save category");
-            })
 
 
+            //store
             var form = $("#ajaxForm");
+
             $("#saveBtn").click(function() {
                 var formData = new FormData(form[0]);
                 $.ajax({
@@ -149,26 +195,54 @@
             });
 
             // Edit button code
-            $('body').on('click', '.editButton', function() {
-                var id = $(this).data('id');
+            $(document).ready(function() {
+                $('body').on('click', '.editButton', function() {
+                    var id = $(this).data('id');
 
+                    $.ajax({
+                        url: '{{ url('categories', '') }}' + '/' + id + '/' + 'edit',
+                        method: 'GET',
+                        success: function(response) {
+                            // Điền giá trị vào các trường input
+                            $('#edit_category_id').val(response.id);
+                            $('#edit_name').val(response.name);
+                            $('#edit_type').val(response.type);
+                        },
+                        error: function(error) {
+                            console.log(error);
+                        }
+                    });
+                });
+            });
+
+            //update
+            var formUpdate = $('#editForm');
+
+            $("#saveEditBtn").click(function() {
+                var formData = new FormData(formUpdate[0]);
                 $.ajax({
-                    url: '{{ url('categories', '') }}' + '/' + id + '/' + 'edit',
-                    method: 'GET',
+                    url: '{{ route('categories.update') }}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-HTTP-Method-Override': 'PUT' // Override method to PUT
+                    },
+                    processData: false,
+                    contentType: false,
+                    data: formData,
                     success: function(response) {
-                        $('.ajax-modal').modal('show');
-                        $('#modal-title').html('Edit category');
-                        $('#saveBtn').html('Update');
-                        $('#name').val(response.name);
-                        $("#type").append('<option selected value="' + response.id + '">' +
-                            response.type + '</option>').selectmenu('refresh');
+                        $(".edit-modal").modal('hide');
+                        Swal.fire({
+                            title: "Success",
+                            text: response.success,
+                            icon: "success"
+                        });
+                        $('#category-table').DataTable().ajax.reload();
                     },
                     error: function(error) {
                         console.log(error);
                     }
-
-                })
-
+                });
             });
         });
     </script>
