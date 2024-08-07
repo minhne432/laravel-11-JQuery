@@ -14,7 +14,7 @@
         crossorigin="anonymous"></script>
     {{-- Sweetalert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    {{-- Datatable --}}
+    {{-- Yajra Datatable --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js">
     </script>
@@ -25,7 +25,7 @@
 
 <body>
 
-   <!-- Modal for Add Category -->
+    <!-- Modal for Add Category -->
     <div class="modal fade ajax-modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <form action="" id="ajaxForm">
@@ -64,7 +64,8 @@
 
 
     <!-- Modal for Edit Category -->
-    <div class="modal fade edit-modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal fade edit-modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel"
+        aria-hidden="true">
         <form action="" id="editForm">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -100,10 +101,28 @@
         </form>
     </div>
 
+    <!-- Modal xác nhận xóa -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this category?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-6 offset-3" style="margin-top: 100px">
-            <!-- Button trigger modal -->
+            <!-- Button trigger Add Category modal -->
             <button type="button" class="btn btn-info" id="addCategory" data-bs-toggle="modal"
                 data-bs-target="#exampleModal">
                 Add category
@@ -111,7 +130,7 @@
             <table id="category-table" class="table">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th scope="col">id</th>
                         <th scope="col">Name</th>
                         <th scope="col">Type</th>
                         <th scope="col">Action</th>
@@ -134,121 +153,18 @@
     </script>
 
     <script>
-        $(document).ready(function() {
-            // get CSRF token from meta tag
-            var csrfToken = $('meta[name="csrf-token"]').attr('content');
-
-            $("#category-table").DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: "{{ route('categories.index') }}",
-                columns: [{
-                        data: 'id'
-                    },
-                    {
-                        data: 'name'
-                    },
-                    {
-                        data: 'type'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    }
-                ]
-            });
-
-            $('#addCategory').click(function(){
-                $('#name').val('');
-                $('#type').val("Choose Option");
-            });
-
-
-
-
-            //save button
-            var form = $("#ajaxForm");
-
-            $("#saveBtn").click(function() {
-                var formData = new FormData(form[0]);
-                $.ajax({
-                    url: '{{ route('categories.store') }}',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    processData: false,
-                    contentType: false,
-                    data: formData,
-                    success: function(response) {
-                        $(".ajax-modal").modal('hide');
-                        Swal.fire({
-                            title: "Success",
-                            text: response.success,
-                            icon: "success"
-                        });
-                        $('#category-table').DataTable().ajax.reload();
-                    },
-                    error: function(error) {
-                        console.log(error);
-                    }
-                });
-            });
-
-            // Edit button code
-            $(document).ready(function() {
-                $('body').on('click', '.editButton', function() {
-                    var id = $(this).data('id');
-
-                    $.ajax({
-                        url: '{{ url('categories', '') }}' + '/' + id + '/' + 'edit',
-                        method: 'GET',
-                        success: function(response) {
-                            // Điền giá trị vào các trường input
-                            $('#edit_category_id').val(response.id);
-                            $('#edit_name').val(response.name);
-                            $('#edit_type').val(response.type);
-                        },
-                        error: function(error) {
-                            console.log(error);
-                        }
-                    });
-                });
-            });
-
-            //update
-            var formUpdate = $('#editForm');
-
-            $("#saveEditBtn").click(function() {
-                var formData = new FormData(formUpdate[0]);
-                $.ajax({
-                    url: '{{ route('categories.update') }}',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-HTTP-Method-Override': 'PUT' // Override method to PUT
-                    },
-                    processData: false,
-                    contentType: false,
-                    data: formData,
-                    success: function(response) {
-                        $(".edit-modal").modal('hide');
-                        Swal.fire({
-                            title: "Success",
-                            text: response.success,
-                            icon: "success"
-                        });
-                        $('#category-table').DataTable().ajax.reload();
-                    },
-                    error: function(error) {
-                        console.log(error);
-                    }
-                });
-            });
-        });
+        var routes = {
+            categoriesIndex: "{{ route('categories.index') }}",
+            categoriesStore: "{{ route('categories.store') }}",
+            categoriesUpdate: "{{ route('categories.update') }}",
+            categoriesEdit: function(id) {
+                return '{{ url('categories') }}/' + id + '/edit';
+            }
+        };
     </script>
+
+    <script src="{{ asset('js/pages/category.js') }}"></script>
+
 </body>
 
 </html>

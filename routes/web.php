@@ -12,3 +12,4 @@ Route::get('/categories/create', [CategoryController::class, 'create'])->name('c
 Route::post('/categories/store', [CategoryController::class, 'store'])->name('categories.store');
 Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
 Route::put('/categories/update', [CategoryController::class, 'update'])->name('categories.update');
+Route::delete('/categories/{id}', [CategoryController::class, 'delete'])->name('categories.delete');
